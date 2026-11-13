@@ -164,7 +164,15 @@ public class Patient extends Thread {
 	 */
 	@Override
 	public void run() {
-		// TODO
+		while(indexProtocol < protocol.size()) {
+			location.enter(this); //Acceder a la ubicación actual
+			attendedAtLocation(); //Atención en la ubicación actual
+			location.exit(this); //Salir de la ubicación actual
+			advanceProtocol(); //Avanzar al siguiente paso de su protocolo
+		}
+		location.enter(this);
+		attendedAtLocation(); //Atención en el su última localización
+		location.exit(this);
 	}
 
 }

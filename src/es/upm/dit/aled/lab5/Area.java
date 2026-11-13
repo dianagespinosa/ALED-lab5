@@ -26,9 +26,9 @@ public class Area {
 	private int time;
 	private Position2D position;
 	private Color color;
-	protected int capacity;
-	protected int numPatients;
-	protected int waiting;
+	protected int capacity; // núm máx de pacientes que pueden atenderse en esa sección
+	protected int numPatients; // cuántos pacientes están siendo atendidos en este momento
+	protected int waiting; // núm de pacientes que están esperando a ser atendidos
 
 	/**
 	 * Builds a new Area.
@@ -40,7 +40,10 @@ public class Area {
 	 * @param position The location of the Area in the GUI.
 	 */
 	public Area(String name, int time, int capacity, Position2D position) {
-		// TODO
+		this.name = name;
+		this.time = time;
+		this.capacity = capacity;
+		this.position = position;
 		this.color = Color.GRAY; // Default color
 	}
 
@@ -96,36 +99,62 @@ public class Area {
 	 * 
 	 * @param p The patient that wants to enter.
 	 */
-	// TODO: method enter
-	
+	public synchronized void enter(Patient p) {
+		waiting++;
+		try {
+			while (numPatients >= capacity) {
+				wait();
+			}
+		} catch (InterruptedException e) {
+			waiting--; // Deja de contar como una espera
+			Thread.currentThread().interrupt(); // Restaura interrupción
+			return; // Vuelve al método sin entrar en el área
+		}
+		numPatients++;
+		waiting--;
+		System.out.println("Patient " + p.getNumber() + " has entered " + name);
+	}
+
 	/**
 	 * Thread safe method that allows a Patient to exit the area. After the Patient
 	 * has left, this method notifys all waiting Patients.
 	 * 
-	 * @param p The patient that wants to enter.
+	 * @param p The patient that wants to exit.
 	 */
-	// TODO method exit
-	
+	public synchronized void exit(Patient p) {
+		numPatients--;
+		notifyAll();
+		System.out.println("Patient " + p.getNumber() + " has exit " + name);
+	}
+
 	/**
 	 * Returns the capacity of the Area. This method must be thread safe.
 	 * 
 	 * @return The capacity.
 	 */
-	// TODO: method getCapacity
-	
+	public synchronized int getCapacity() {
+		return this.capacity;
+	}
+
 	/**
-	 * Returns the current number of Patients being treated at the Area. This method must be thread safe.
+	 * Returns the current number of Patients being treated at the Area. This method
+	 * must be thread safe.
 	 * 
 	 * @return The number of Patients being treated.
 	 */
-	// TODO: method getNumPatients
+	public synchronized int getNumPatients() {
+		return this.numPatients;
+	}
 
 	/**
-	 * Returns the current number of Patients waiting to be treated at the Area. This method must be thread safe.
+	 * Returns the current number of Patients waiting to be treated at the Area.
+	 * This method must be thread safe.
 	 * 
 	 * @return The number of Patients waiting to be treated.
 	 */
-	// TODO method getWaiting
+	public synchronized int getWaiting() {
+		return this.waiting;
+	}
 
 	@Override
 	public int hashCode() {
